@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast - Aplikasi Cuaca SPA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#home"><i class="fa-solid fa-cloud-sun text-info me-2"></i>SkyCast</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link active" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#current">Detail Cuaca</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#analytics">Analitik</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#daily">7 Hari</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#favorite">Favorit</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about">Tentang</a></li>
+                    <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+                        <button class="btn btn-theme-toggle rounded-circle" id="themeToggleBtn">
+                            <i class="fa-solid fa-moon"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3 position-fixed top-0 start-50 translate-middle-x global-alert-container">
+        <div id="globalAlert" class="alert alert-danger alert-dismissible fade show d-none shadow" role="alert">
+            <span id="alertMessage">Terjadi kesalahan!</span>
+            <button type="button" class="btn-close" onclick="closeAlert()"></button>
+        </div>
+    </div>
+
+    <section id="home" class="hero-section text-center text-white">
+        <div class="container py-4 position-relative z-2">
+            <h1 class="display-4 fw-bold animate__animated animate__fadeInDown">Pantau Cuaca Global Real-Time</h1>
+            <p class="lead animate__animated animate__fadeInUp animate__delay-1s text-white-50">Dapatkan informasi cuaca, polusi udara, dan prakiraan akurat di seluruh belahan dunia.</p>
+            
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-7 position-relative">
+                    <div class="search-wrapper shadow-lg rounded-pill overflow-hidden bg-white p-1 d-flex align-items-center">
+                        <span class="px-3"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" id="citySearchInput" class="form-control border-0 bg-transparent text-dark py-2" placeholder="Masukkan nama kota luar negeri / lokal...">
+                        <button class="btn btn-search rounded-pill px-4 fw-bold text-white me-1" id="searchBtn">Cari</button>
+                        <button class="btn btn-geo rounded-pill me-1" id="geoLocBtn" title="Gunakan Lokasi Saya"><i class="fa-solid fa-location-crosshairs text-primary"></i></button>
+                    </div>
+                    <div id="autocompleteList" class="search-results-list d-none shadow-lg"></div>
+                </div>
+            </div>
+
+            <div class="mt-4 animate__animated animate__fadeIn animate__delay-1s" id="searchHistoryContainer">
+                <span class="small text-white-50 me-2">Terakhir dicari:</span>
+                <span id="historyBadges"></span>
+            </div>
+        </div>
+    </section>
+
+    <main class="container my-5">
+        
+        <section id="current" class="mb-5 scroll-section">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="section-title fw-bold m-0"><i class="fa-solid fa-temperature-half text-primary me-2"></i>Kondisi Cuaca Saat Ini</h3>
+                <button class="btn btn-sm btn-favorite-toggle" id="addFavBtn"><i class="fa-regular fa-star me-1"></i>Favoritkan</button>
+            </div>
+            
+            <div class="card-custom animate__animated animate__fadeIn">
+                <div class="row align-items-center">
+                    <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                        <h2 id="displayCityName" class="fw-bold mb-1">Jakarta, Indonesia</h2>
+                        <p id="displayLocalTime" class="text-muted small mb-3">Jam Setempat: --:--</p>
+                        <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+                            <span id="displayTemp" class="display-2 fw-bold text-gradient">--°C</span>
+                            <div class="ms-3">
+                                <h4 id="displayWeatherDesc" class="mb-0 fw-semibold text-main-color">--</h4>
+                                <span id="displayApparentTemp" class="text-muted small">Terasa seperti: --°C</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="grid-detail-item">
+                                    <small class="text-muted d-block mb-1"><i class="fa-solid fa-droplet text-info me-1"></i>Kelembapan</small>
+                                    <span id="displayHumidity" class="fw-bold">-- %</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="grid-detail-item">
+                                    <small class="text-muted d-block mb-1"><i class="fa-solid fa-wind text-warning me-1"></i>Kecepatan Angin</small>
+                                    <span id="displayWind" class="fw-bold">-- km/jam</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="grid-detail-item">
+                                    <small class="text-muted d-block mb-1"><i class="fa-solid fa-sun text-danger me-1"></i>Indeks UV</small>
+                                    <span id="displayUV" class="fw-bold">--</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="grid-detail-item">
+                                    <small class="text-muted d-block mb-1"><i class="fa-solid fa-mask text-success me-1"></i>Kualitas Udara (AQI)</small>
+                                    <span id="displayAQI" class="fw-bold">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="analytics" class="mb-5 scroll-section">
+            <h3 class="section-title fw-bold mb-4"><i class="fa-solid fa-chart-line text-primary me-2"></i>Tren Prediksi Suhu (24 Jam Ke Depan)</h3>
+            <div class="card-custom">
+                <div class="chart-container" style="position: relative; height: 280px; width: 100%;">
+                    <canvas id="hourlyWeatherChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="daily" class="mb-5 scroll-section">
+            <h3 class="section-title fw-bold mb-4"><i class="fa-solid fa-calendar-days text-primary me-2"></i>Prakiraan Cuaca 7 Hari</h3>
+            <div class="card-custom">
+                <div class="forecast-scroll" id="dailyForecastContainer">
+                </div>
+            </div>
+        </section>
+
+        <section id="favorite" class="mb-5 scroll-section">
+            <h3 class="section-title fw-bold mb-4"><i class="fa-solid fa-star text-warning me-2"></i>Daftar Kota Favorit Kamu</h3>
+            <div class="card-custom">
+                <div id="favoriteCitiesContainer" class="d-flex flex-wrap gap-2">
+                    <p class="text-muted mb-0">Belum ada kota favorit yang disimpan.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="mb-5 scroll-section">
+            <h3 class="section-title fw-bold mb-4"><i class="fa-solid fa-circle-info text-primary me-2"></i>Tentang SkyCast</h3>
+            <div class="card-custom info-list-box">
+                <h5 class="fw-bold text-primary mb-3">Fitur Utama SPA Terintegrasi:</h5>
+                <ul class="m-0">
+                    <li>Pencarian Kota Global Cepat berbasis Koordinat Akurat Open-Meteo.</li>
+                    <li>Sistem Deteksi Otomatis Koordinat Geolocation Perangkat Pengguna.</li>
+                    <li>Visualisasi Grafik tren fluktuasi cuaca berbasis Chart.js.</li>
+                    <li>Penyimpanan Lokal (Local Storage) untuk menghemat preferensi Kota Favorit & Riwayat secara permanen.</li>
+                </ul>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-white text-center py-5 mt-auto border-top">
+        <div class="container">
+            <h5 class="fw-bold mb-2 text-primary">SkyCast Pro</h5>
+            <p class="small mb-3 footer-nav">
+                <a href="#home" class="text-decoration-none mx-2">Home</a> | 
+                <a href="#current" class="text-decoration-none mx-2">Detail</a> | 
+                <a href="#analytics" class="text-decoration-none mx-2">Grafik</a>
+            </p>
+            <p class="small text-muted mb-0">&copy; 2026 SkyCast Project. Dibuat Menggunakan Integrasi Data API Terbuka Bebas dari Open-Meteo.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

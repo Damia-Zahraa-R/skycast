@@ -72,7 +72,7 @@ SkyCast/
 1. Clone repository ini.
 
 ```bash
-git clone https://github.com/username/skycast.git
+git clone https://github.com/damia-zahraa-r/skycast.git
 ```
 
 2. Masuk ke folder proyek.
